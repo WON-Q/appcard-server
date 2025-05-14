@@ -29,9 +29,4 @@ public class InitiateAuthRequest {
      */
     private String merchantName;
 
-    /**
-     * 주문 ID
-     */
-    private String orderId;
-
 }

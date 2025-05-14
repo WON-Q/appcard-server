@@ -32,12 +32,6 @@ public class AuthenticationSession {
     private String merchantName;
 
     /**
-     * 주문 ID
-     */
-    @Column(name = "order_id", nullable = false)
-    private String orderId;
-
-    /**
      * 챌린지(= 비어있는 인증 문서)
      */
     @Column(nullable = false)

@@ -35,7 +35,6 @@ public class AuthService {
                 .txnId(req.getTxnId())
                 .amount(req.getAmount())
                 .merchantName(req.getMerchantName())
-                .orderId(req.getOrderId())
                 .challenge(challenge)
                 .status(AuthStatus.PENDING)
                 .expiresAt(LocalDateTime.now().plusSeconds(60))
