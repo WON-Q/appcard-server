@@ -4,7 +4,11 @@ import com.fisa.appcard.domain.AppCardKey;
 import com.fisa.appcard.domain.AuthStatus;
 import com.fisa.appcard.domain.AuthenticationSession;
 import com.fisa.appcard.dto.request.InitiateAuthRequest;
+import com.fisa.appcard.feign.dto.request.PgAuthorizeRequest;
 import com.fisa.appcard.dto.response.InitiateAuthResponse;
+import com.fisa.appcard.feign.dto.response.BaseResponse;
+import com.fisa.appcard.feign.dto.response.PgAuthorizeResponse;
+import com.fisa.appcard.feign.PgClient;
 import com.fisa.appcard.repository.AppCardKeyRepository;
 import com.fisa.appcard.repository.AuthSessionRepository;
 import com.fisa.appcard.utils.ChallengeUtil;
@@ -12,6 +16,7 @@ import com.fisa.appcard.utils.SignatureUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,13 +26,14 @@ import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-
+    private final PgClient pgClient;
     private final AuthSessionRepository authSessionRepository;
     private final AppCardKeyRepository keyRepository;
 
@@ -91,7 +97,7 @@ public class AuthService {
      * @param signatureBase64Url 클라이언트(Flutter)가 전송한 서명값, URL-safe Base64 형식의 64바이트 Ed25519 서명 (raw r||s)
      * @return 검증 성공 여부 (true: 인증 성공, false: 인증 실패)
      */
-    public boolean verify(String txnId, String cardId, String signatureBase64Url) {
+    public boolean verify(String txnId, String cardId, String signatureBase64Url, String cardNumber, String cardType) {
         // 1. 인증 세션 조회
         AuthenticationSession session = authSessionRepository.findById(txnId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "세션이 없습니다."));
@@ -109,9 +115,24 @@ public class AuthService {
                 publicKey               // 등록된 공개키
         );
 
-        // 5. 검증 결과에 따라 세션 상태를 업데이트
+        // 5. 검증 결과에 따라 세션 상태를 업데이트 -> PG서버에 인증 완료 API 호출 -> 결제 성공 여부 응답 받음
         if (ok) {
-            session.authenticate(); // 인증 성공 → 상태를 AUTHENTICATED로 변경
+            // (1) 인증에 성공한 경우:
+            session.authenticate(); // 인증 성공 → 세션 상태를 AUTHENTICATED로 변경
+
+            // (2) PG 서버에 전송할 인증 완료 요청 객체 생성
+            PgAuthorizeRequest requestDto = PgAuthorizeRequest.builder()
+                    .txnId(txnId) // 트랜잭션 고유 ID
+                    .authenticated(true) // 인증 성공 여부(true)
+                    .authenticatedAt(Instant.now().toString()) // 인증 시각 (ISO-8601 형식 문자열)
+                    .cardNumber(cardNumber) // 사용자가 선택한 카드 번호
+                    .cardType(cardType) // 카드 유형 (CREDIT, CHECK)
+                    .build();
+
+            // (3) PG 서버에 인증 결과 전송 → 실제 결제 승인 요청
+            // PG 서버는 이 인증 결과를 바탕으로 결제를 진행하거나 거절할 수 있음
+            ResponseEntity<BaseResponse<PgAuthorizeResponse>> response = pgClient.authorize(txnId, requestDto);
+
         } else {
             session.fail(); // 인증 실패 → 상태를 FAILED로 변경
         }

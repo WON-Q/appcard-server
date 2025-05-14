@@ -2,9 +2,12 @@ package com.fisa.appcard.controller;
 
 import com.fisa.appcard.dto.request.InitiateAuthRequest;
 import com.fisa.appcard.dto.request.RegisterKeyRequest;
+import com.fisa.appcard.dto.request.VerifyRequest;
 import com.fisa.appcard.dto.response.ChallengeResponse;
 import com.fisa.appcard.dto.response.InitiateAuthResponse;
+import com.fisa.appcard.dto.response.VerifyResponse;
 import com.fisa.appcard.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,5 +44,15 @@ public class AuthenticationController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * 검증 요청 API
+     */
+    @PostMapping("/{txnId}/verify")
+    public VerifyResponse verify(
+            @PathVariable String txnId,
+            @Valid @RequestBody VerifyRequest req
+    ) {
+        return new VerifyResponse(authService.verify(txnId, req.getCardId(), req.getSignature(), req.getCardNumber(), req.getCardType()));
+    }
 
 }
