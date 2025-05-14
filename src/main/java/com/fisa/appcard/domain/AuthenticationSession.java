@@ -50,4 +50,25 @@ public class AuthenticationSession {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
+    /**
+     * 인증 진행 중 상태로 인증 상태를 변경하는 메서드
+     */
+    public void pending() {
+        this.status = AuthStatus.PENDING;
+    }
+
+    /**
+     * 인증 완료 상태로 인증 상태를 변경하는 메서드
+     */
+    public void authenticate() {
+        this.status = AuthStatus.AUTHENTICATED;
+    }
+
+    /**
+     * 인증 실패 상태로 인증 상태를 변경하는 메서드
+     */
+    public void fail() {
+        this.status = AuthStatus.FAILED;
+    }
+
 }
