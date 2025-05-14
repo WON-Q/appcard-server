@@ -52,4 +52,13 @@ public class AuthService {
         return new InitiateAuthResponse(deepLink);
     }
 
+    /**
+     * txnId에 해당하는 인증세션의 챌린지 값을 반환합니다.
+     * @param txnId
+     * @return challenge
+     */
+    public String getChallenge(String txnId) {
+        return authSessionRepository.findById(txnId).orElseThrow().getChallenge();
+    }
+
 }
