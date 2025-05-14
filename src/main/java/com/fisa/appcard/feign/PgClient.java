@@ -1,5 +1,6 @@
 package com.fisa.appcard.feign;
 
+import com.fisa.appcard.config.feign.PgClientConfig;
 import com.fisa.appcard.feign.dto.request.PgAuthorizeRequest;
 import com.fisa.appcard.feign.dto.response.BaseResponse;
 import com.fisa.appcard.feign.dto.response.PgAuthorizeResponse;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  * - POST /payments/{txnId}/authorize
  * → 해당 트랜잭션(txnId)에 대한 인증 성공 여부 및 카드 정보를 PG 서버에 전달하여 결제 승인을 요청합니다.
  */
-@FeignClient(name = "pgClient", url = "${app.pg.endpoint")
+@FeignClient(name = "pgClient", url = "${app.pg.endpoint", configuration = PgClientConfig.class)
 public interface PgClient {
 
     /**
