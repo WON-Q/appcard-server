@@ -32,12 +32,6 @@ public class AuthenticationSession {
     private String merchantName;
 
     /**
-     * 주문 ID
-     */
-    @Column(name = "order_id", nullable = false)
-    private String orderId;
-
-    /**
      * 챌린지(= 비어있는 인증 문서)
      */
     @Column(nullable = false)
@@ -55,5 +49,26 @@ public class AuthenticationSession {
      */
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
+
+    /**
+     * 인증 진행 중 상태로 인증 상태를 변경하는 메서드
+     */
+    public void pending() {
+        this.status = AuthStatus.PENDING;
+    }
+
+    /**
+     * 인증 완료 상태로 인증 상태를 변경하는 메서드
+     */
+    public void authenticate() {
+        this.status = AuthStatus.AUTHENTICATED;
+    }
+
+    /**
+     * 인증 실패 상태로 인증 상태를 변경하는 메서드
+     */
+    public void fail() {
+        this.status = AuthStatus.FAILED;
+    }
 
 }
