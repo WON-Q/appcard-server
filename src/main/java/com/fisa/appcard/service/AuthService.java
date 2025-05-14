@@ -1,9 +1,11 @@
 package com.fisa.appcard.service;
 
+import com.fisa.appcard.domain.AppCardKey;
 import com.fisa.appcard.domain.AuthStatus;
 import com.fisa.appcard.domain.AuthenticationSession;
 import com.fisa.appcard.dto.request.InitiateAuthRequest;
 import com.fisa.appcard.dto.response.InitiateAuthResponse;
+import com.fisa.appcard.repository.AppCardKeyRepository;
 import com.fisa.appcard.repository.AuthSessionRepository;
 import com.fisa.appcard.utils.ChallengeUtil;
 import jakarta.transaction.Transactional;
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 public class AuthService {
 
     private final AuthSessionRepository authSessionRepository;
+    private final AppCardKeyRepository keyRepository;
 
     private final ChallengeUtil generator;
 
@@ -54,11 +57,23 @@ public class AuthService {
 
     /**
      * txnId에 해당하는 인증세션의 챌린지 값을 반환합니다.
+     *
      * @param txnId
      * @return challenge
      */
     public String getChallenge(String txnId) {
         return authSessionRepository.findById(txnId).orElseThrow().getChallenge();
+    }
+
+    /**
+     * 카드의 공개키를 저장합니다.
+     *
+     * @param cardId    저장할 카드의 고유 ID
+     * @param publicKey 카드의 Base64 인코딩 공개키
+     */
+    public void registerPublicKey(String cardId, String publicKey) {
+        AppCardKey key = new AppCardKey(cardId, publicKey);
+        keyRepository.save(key);
     }
 
 }
