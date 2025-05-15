@@ -4,11 +4,11 @@ import com.fisa.appcard.domain.AppCardKey;
 import com.fisa.appcard.domain.AuthStatus;
 import com.fisa.appcard.domain.AuthenticationSession;
 import com.fisa.appcard.dto.request.InitiateAuthRequest;
-import com.fisa.appcard.feign.dto.request.PgAuthorizeRequest;
 import com.fisa.appcard.dto.response.InitiateAuthResponse;
+import com.fisa.appcard.feign.PgClient;
+import com.fisa.appcard.feign.dto.request.PgAuthorizeRequest;
 import com.fisa.appcard.feign.dto.response.BaseResponse;
 import com.fisa.appcard.feign.dto.response.PgAuthorizeResponse;
-import com.fisa.appcard.feign.PgClient;
 import com.fisa.appcard.repository.AppCardKeyRepository;
 import com.fisa.appcard.repository.AuthSessionRepository;
 import com.fisa.appcard.utils.ChallengeUtil;
@@ -40,7 +40,7 @@ public class AuthService {
     private final ChallengeUtil generator;
 
     @Transactional
-    public InitiateAuthResponse initiate(InitiateAuthRequest req) {
+    public BaseResponse<InitiateAuthResponse> initiate(InitiateAuthRequest req) {
         // 인증을 위한 챌린지 생성
         String challenge = generator.generate();
 
@@ -64,8 +64,15 @@ public class AuthService {
                 + "&merchant=" + URLEncoder.encode(req.getMerchantName(), StandardCharsets.UTF_8)
                 + "&amount=" + req.getAmount();
 
+        InitiateAuthResponse data = new InitiateAuthResponse(deepLink);
+
         // 딥링크 DTO 반환
-        return new InitiateAuthResponse(deepLink);
+        return new BaseResponse<>(
+                true,
+                "200",
+                "딥링크 발급 성공",
+                data
+        );
     }
 
     /**

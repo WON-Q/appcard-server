@@ -6,6 +6,7 @@ import com.fisa.appcard.dto.request.VerifyRequest;
 import com.fisa.appcard.dto.response.ChallengeResponse;
 import com.fisa.appcard.dto.response.InitiateAuthResponse;
 import com.fisa.appcard.dto.response.VerifyResponse;
+import com.fisa.appcard.feign.dto.response.BaseResponse;
 import com.fisa.appcard.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +24,12 @@ public class AuthenticationController {
      * 딥링크 생성 API
      */
     @PostMapping
-    public InitiateAuthResponse initiate(@RequestBody InitiateAuthRequest req) {
-        return authService.initiate(req);
+    public ResponseEntity<BaseResponse<InitiateAuthResponse>> initiate(
+            @RequestBody InitiateAuthRequest req
+    ) {
+        BaseResponse<InitiateAuthResponse> resp = authService.initiate(req);
+        return ResponseEntity
+                .ok(resp);
     }
 
     /**
