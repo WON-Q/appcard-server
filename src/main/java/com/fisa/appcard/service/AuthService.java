@@ -3,6 +3,7 @@ package com.fisa.appcard.service;
 import com.fisa.appcard.domain.AppCardKey;
 import com.fisa.appcard.domain.AuthStatus;
 import com.fisa.appcard.domain.AuthenticationSession;
+import com.fisa.appcard.domain.PaymentStatus;
 import com.fisa.appcard.dto.request.InitiateAuthRequest;
 import com.fisa.appcard.dto.response.InitiateAuthResponse;
 import com.fisa.appcard.feign.PgClient;
@@ -29,6 +30,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -62,7 +64,8 @@ public class AuthService {
         String deepLink = "appcard://auth"
                 + "?txn=" + req.getTxnId()
                 + "&merchant=" + URLEncoder.encode(req.getMerchantName(), StandardCharsets.UTF_8)
-                + "&amount=" + req.getAmount();
+                + "&amount=" + req.getAmount()
+                + "&returnUrl=" + req.getCallbackUrl();
 
         InitiateAuthResponse data = new InitiateAuthResponse(deepLink);
 
@@ -140,11 +143,18 @@ public class AuthService {
             // PG 서버는 이 인증 결과를 바탕으로 결제를 진행하거나 거절할 수 있음
             ResponseEntity<BaseResponse<PgAuthorizeResponse>> response = pgClient.authorize(txnId, requestDto);
 
+            // 여기서 response의 paymentStatus값이 SUCCESS 라면 True를 Fail이라면 False를 반환함.
+            return Optional.ofNullable(response.getBody())
+                    .map(BaseResponse::getData)                  // PgAuthorizeResponse
+                    .map(PgAuthorizeResponse::getPaymentStatus) // PaymentStatus
+                    .map(status -> status == PaymentStatus.SUCCESS) // SUCCESS → true, 나머지 → false
+                    .orElse(false);                              // body 또는 data 가 없으면 실패(false)
+
+
         } else {
             session.fail(); // 인증 실패 → 상태를 FAILED로 변경
+            return false;
         }
-
-        return ok; // 최종 검증 결과 반환
     }
 
     /**
