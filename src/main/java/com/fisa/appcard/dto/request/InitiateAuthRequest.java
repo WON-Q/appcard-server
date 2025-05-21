@@ -29,4 +29,9 @@ public class InitiateAuthRequest {
      */
     private String merchantName;
 
+    /**
+     * 결제 후 돌아올 웹 URL
+     */
+    private String callbackUrl;
+
 }
