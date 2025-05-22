@@ -64,5 +64,4 @@ public class AuthenticationController {
     ) {
         return new VerifyResponse(authService.verify(txnId, req.getCardId(), req.getSignature(), req.getCardNumber(), req.getCardType()));
     }
-
 }

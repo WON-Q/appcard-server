@@ -125,10 +125,12 @@ public class AuthService {
                 publicKey               // 등록된 공개키
         );
 
+
         // 5. 검증 결과에 따라 세션 상태를 업데이트 -> PG서버에 인증 완료 API 호출 -> 결제 성공 여부 응답 받음
         if (ok) {
             // (1) 인증에 성공한 경우:
             session.authenticate(); // 인증 성공 → 세션 상태를 AUTHENTICATED로 변경
+
 
             // (2) PG 서버에 전송할 인증 완료 요청 객체 생성
             PgAuthorizeRequest requestDto = PgAuthorizeRequest.builder()
@@ -141,13 +143,12 @@ public class AuthService {
 
             // (3) PG 서버에 인증 결과 전송 → 실제 결제 승인 요청
             // PG 서버는 이 인증 결과를 바탕으로 결제를 진행하거나 거절할 수 있음
-            ResponseEntity<BaseResponse<PgAuthorizeResponse>> response = pgClient.authorize(txnId, requestDto);
-
+            ResponseEntity<BaseResponse<PgAuthorizeResponse>> response = pgClient.authorize(requestDto);
             // 여기서 response의 paymentStatus값이 SUCCESS 라면 True를 Fail이라면 False를 반환함.
             return Optional.ofNullable(response.getBody())
                     .map(BaseResponse::getData)                  // PgAuthorizeResponse
                     .map(PgAuthorizeResponse::getPaymentStatus) // PaymentStatus
-                    .map(status -> status == PaymentStatus.SUCCESS) // SUCCESS → true, 나머지 → false
+                    .map(status -> status == PaymentStatus.SUCCEEDED) // SUCCESS → true, 나머지 → false
                     .orElse(false);                              // body 또는 data 가 없으면 실패(false)
 
 

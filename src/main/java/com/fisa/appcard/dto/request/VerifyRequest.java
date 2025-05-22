@@ -22,7 +22,7 @@ public class VerifyRequest {
     private String signature;
 
     /**
-     * 카드 타입(CREDIT, CHECK)
+     * 카드 타입(CREDIT, DEBIT)
      */
     @NotBlank
     private String cardType;

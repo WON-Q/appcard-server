@@ -12,8 +12,8 @@ public class PgClientConfig {
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
+            //requestTemplate.header("Authorization", "Bearer " + token);
             requestTemplate.header("Content-Type", "application/json");
-            requestTemplate.header("Authorization", "Bearer " + token);
         };
     }
 }
